@@ -25,6 +25,7 @@ public class Epi extends Produto{
 	@Override
 	public void exibirDetalhes() {
 		System.out.println("--- Detalhes do EPI ---");
+		System.out.println("ID: " + getId());
 		System.out.println("Nome: " + getNome());
 		System.out.println("Tamanho: " + getTamanho());
 		System.out.println("Quantidade: " + getQuantidade() + getUnidadeMedida());

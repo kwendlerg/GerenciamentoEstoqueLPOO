@@ -5,6 +5,7 @@ public abstract class Funcionario {
 	private int id;
 	private String nome;
 	private LocalDate dataAdmissao;
+	
 	public int getId() {
 		return id;
 	}

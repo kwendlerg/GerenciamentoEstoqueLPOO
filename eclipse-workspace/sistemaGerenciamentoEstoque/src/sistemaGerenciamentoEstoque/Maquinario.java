@@ -1,5 +1,4 @@
 package sistemaGerenciamentoEstoque;
-
 import java.time.LocalDate;
 
 public class Maquinario extends Produto{
@@ -35,6 +34,7 @@ public class Maquinario extends Produto{
 	@Override
 	public void exibirDetalhes() {
 		System.out.println("--- Detalhes do MAQUINARIO ---");
+		System.out.println("ID: " + getId());
 		System.out.println("Nome: " + getNome());
 		System.out.println("Numero de Serie: " + getNumeroSerie());
 		System.out.println("Marca: " + getMarca());
