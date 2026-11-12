@@ -5,7 +5,6 @@ public abstract class Funcionario {
 	private int id;
 	private String nome;
 	private LocalDate dataAdmissao;
-	private double salario;
 	public int getId() {
 		return id;
 	}
@@ -24,24 +23,16 @@ public abstract class Funcionario {
 	public void setDataAdmissão(LocalDate dataAdmissao) {
 		this.dataAdmissao = dataAdmissao;
 	}
-	public double getSalario() {
-		return salario;
-	}
-	public void setSalario(double salario) {
-		this.salario = salario;
-	}
 	
-	protected Funcionario(String nome,LocalDate dataAdmissao, double salario) {
+	protected Funcionario(String nome,LocalDate dataAdmissao) {
 		this.nome = nome;
 		this.dataAdmissao = dataAdmissao;
-		this.salario = salario;
 	}
 	
-	protected Funcionario(int id, String nome,LocalDate dataAdmissao, double salario) {
+	protected Funcionario(int id, String nome,LocalDate dataAdmissao) {
 		this.id = id;
 		this.nome = nome;
 		this.dataAdmissao = dataAdmissao;
-		this.salario = salario;
 	}
 	
 	public abstract void exibirDetalhes();

@@ -6,6 +6,7 @@ public abstract class Produto {
 	private String nome;
 	private double custo;
 	private double quantidade;
+	private String unidadeMedida;
 	private int lote;
 	private LocalDate dataValidade;
 	
@@ -34,6 +35,12 @@ public abstract class Produto {
 	public void setQuantidade(double quantidade) {
 		this.quantidade = quantidade;
 	}
+	public String getUnidadeMedida() {
+		return unidadeMedida;
+	}
+	public void setUnidadeMedida(String unidadeMedida) {
+		this.unidadeMedida = unidadeMedida;
+	}
 	public int getLote() {
 		return lote;
 	}
@@ -47,10 +54,11 @@ public abstract class Produto {
 		this.dataValidade = dataValidade;
 	}
 	
-	protected Produto(String nome, double custo, double quantidade, int lote, LocalDate dataValidade) {
+	protected Produto(String nome, double custo, double quantidade, int lote, LocalDate dataValidade, String unidadeMedida) {
 		this.nome = nome;
 		this.custo = custo;
 		this.quantidade = quantidade;
+		this.unidadeMedida = unidadeMedida;
 		this.lote = lote;
 		this.dataValidade = dataValidade;
 	}
