@@ -9,7 +9,7 @@ public class Adm extends Funcionario{
 	
 	@Override
 	public void exibirDetalhes() {
-		System.out.println("--- Detalhes do MAQUINARIO ---");
+		System.out.println("--- Detalhes do ADM ---");
 		System.out.println("ID: " + getId());
 		System.out.println("Nome: " + getNome());
 		System.out.println("Data de Admissão; " + getDataAdmissao());

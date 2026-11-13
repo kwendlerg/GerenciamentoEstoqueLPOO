@@ -9,7 +9,7 @@ public class MaterialConsumo extends Produto{
 	
 	@Override
 	public void exibirDetalhes() {
-		System.out.println("--- Detalhes do MAQUINARIO ---");
+		System.out.println("--- Detalhes do MATERIAL DE CONSUMO ---");
 		System.out.println("ID: " + getId());
 		System.out.println("Nome: " + getNome());
 		System.out.println("Quantidade: " + getQuantidade() + getUnidadeMedida());

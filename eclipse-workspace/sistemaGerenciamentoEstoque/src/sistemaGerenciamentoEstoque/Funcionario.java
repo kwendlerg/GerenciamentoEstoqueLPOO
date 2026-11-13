@@ -16,24 +16,27 @@ public abstract class Funcionario {
 		return nome;
 	}
 	public void setNome(String nome) {
-		this.nome = nome;
+	    if (nome == null || nome.trim().isEmpty()) {
+	        throw new IllegalArgumentException("O nome não pode ser nulo ou vazio.");
+	    }
+	    this.nome = nome;
 	}
 	public LocalDate getDataAdmissao() {
 		return dataAdmissao;
 	}
-	public void setDataAdmissão(LocalDate dataAdmissao) {
+	public void setDataAdmissao(LocalDate dataAdmissao) {
 		this.dataAdmissao = dataAdmissao;
 	}
 	
 	protected Funcionario(String nome,LocalDate dataAdmissao) {
-		this.nome = nome;
-		this.dataAdmissao = dataAdmissao;
+		setNome(nome);
+		setDataAdmissao(dataAdmissao);
 	}
 	
 	protected Funcionario(int id, String nome,LocalDate dataAdmissao) {
-		this.id = id;
-		this.nome = nome;
-		this.dataAdmissao = dataAdmissao;
+		setId(id);
+		setNome(nome);
+		setDataAdmissao(dataAdmissao);
 	}
 	
 	public abstract void exibirDetalhes();

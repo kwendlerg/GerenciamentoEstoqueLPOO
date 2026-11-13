@@ -21,18 +21,27 @@ public abstract class Produto {
 		return nome;
 	}
 	public void setNome(String nome) {
-		this.nome = nome;
+	    if (nome == null || nome.trim().isEmpty()) {
+	        throw new IllegalArgumentException("O nome não pode ser nulo ou vazio.");
+	    }
+	    this.nome = nome;
 	}
 	public double getCusto() {
 		return custo;
 	}
 	public void setCusto(double custo) {
+		if (custo < 0) {
+			throw new IllegalArgumentException("O custo não pode ser negativo.");
+		}	
 		this.custo = custo;
 	}
 	public double getQuantidade() {
 		return quantidade;
 	}
 	public void setQuantidade(double quantidade) {
+		if (quantidade < 0) {
+			throw new IllegalArgumentException("A quantidade não pode ser negativa.");
+		}
 		this.quantidade = quantidade;
 	}
 	public String getUnidadeMedida() {
@@ -45,6 +54,9 @@ public abstract class Produto {
 		return lote;
 	}
 	public void setLote(int lote) {
+		if (lote < 0) {
+			throw new IllegalArgumentException("O lote não pode ser negativo.");
+		}
 		this.lote = lote;
 	}
 	public LocalDate getDataValidade() {
@@ -55,21 +67,20 @@ public abstract class Produto {
 	}
 	
 	protected Produto(String nome, double custo, double quantidade, int lote, LocalDate dataValidade, String unidadeMedida) {
-		this.nome = nome;
-		this.custo = custo;
-		this.quantidade = quantidade;
-		this.unidadeMedida = unidadeMedida;
-		this.lote = lote;
-		this.dataValidade = dataValidade;
+		setNome(nome);
+		setCusto(custo);
+		setQuantidade(quantidade);
+		setLote(lote);
+		setDataValidade(dataValidade);
 	}
 	
 	protected Produto(int id, String nome, double custo, double quantidade, int lote, LocalDate dataValidade) {
-		this.id = id;
-		this.nome = nome;
-		this.custo = custo;
-		this.quantidade = quantidade;
-		this.lote = lote;
-		this.dataValidade = dataValidade;
+		setId(id);
+		setNome(nome);
+		setCusto(custo);
+		setQuantidade(quantidade);
+		setLote(lote);
+		setDataValidade(dataValidade);
 	}
 	
 	public abstract void exibirDetalhes();
