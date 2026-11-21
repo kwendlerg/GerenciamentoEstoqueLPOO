@@ -13,8 +13,63 @@ public class TelaEstoque extends javax.swing.JFrame {
     /**
      * Creates new form TelaEstoque
      */
-    public TelaEstoque() {
-        initComponents();
+   
+public TelaEstoque() {
+    javax.swing.UIManager.put("OptionPane.yesButtonText", "Sim");
+    javax.swing.UIManager.put("OptionPane.noButtonText", "Não");
+
+    initComponents();
+    carregarProdutos();
+}
+
+
+    // Consulta os produtos salvos e atualiza a tabela.
+    private void carregarProdutos() {
+        sistemaGerenciamentoEstoque.ProdutoController controller =
+            new sistemaGerenciamentoEstoque.ProdutoController();
+
+        try {
+            java.util.ArrayList<sistemaGerenciamentoEstoque.Produto> produtos =
+                controller.listarProdutos();
+
+            javax.swing.table.DefaultTableModel modelo =
+                (javax.swing.table.DefaultTableModel) tblProdutos.getModel();
+            modelo.setRowCount(0);
+
+            for (sistemaGerenciamentoEstoque.Produto produto : produtos) {
+                String tipo;
+                if (produto instanceof sistemaGerenciamentoEstoque.Epi) {
+                    tipo = "EPI";
+                } else if (produto instanceof sistemaGerenciamentoEstoque.Maquinario) {
+                    tipo = "Maquinário";
+                } else {
+                    tipo = "Material de consumo";
+                }
+
+                String validade = "";
+                if (produto.getDataValidade() != null) {
+                    validade = produto.getDataValidade().format(
+                        java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                    );
+                }
+
+                modelo.addRow(new Object[]{
+                    produto.getId(),
+                    produto.getNome(),
+                    tipo,
+                    produto.getCusto(),
+                    produto.getQuantidade(),
+                    produto.getUnidadeMedida(),
+                    produto.getLote(),
+                    validade,
+                    "Cadastrado"
+                });
+            }
+        } catch (java.sql.SQLException erro) {
+            javax.swing.JOptionPane.showMessageDialog(
+                this, "Erro ao carregar produtos: " + erro.getMessage()
+            );
+        }
     }
 
     /**
@@ -118,14 +173,23 @@ public class TelaEstoque extends javax.swing.JFrame {
 
             },
             new String [] {
-                "Nome", "Tipo", "Custo", "Quantidade", "Unidade", "Lote", "Validade", "Situação"
+                "ID", "Nome", "Tipo", "Custo", "Quantidade", "Unidade", "Lote", "Validade", "Situação"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class
+                java.lang.Integer.class,
+                java.lang.String.class,
+                java.lang.String.class,
+                java.lang.Double.class,
+                java.lang.Double.class,
+                java.lang.String.class,
+                java.lang.Integer.class,
+                java.lang.String.class,
+                java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false, false
+                false, false, false, false, false,
+                false, false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -391,17 +455,34 @@ if (lote < 0) {
 javax.swing.table.DefaultTableModel modelo =
     (javax.swing.table.DefaultTableModel) tblProdutos.getModel();
 
-// Adiciona os dados na ordem das oito colunas
-modelo.addRow(new Object[]{
-    nome,
-    tipo,
-    custo,
-    quantidade,
-    unidade,
-    lote,
-    validade.format(formato),
-    "Válido"
-});
+
+if (!tipo.equals("Material de consumo")) {
+    javax.swing.JOptionPane.showMessageDialog(
+        this, "Por enquanto, cadastre apenas Material de consumo."
+    );
+    return;
+}
+
+sistemaGerenciamentoEstoque.MaterialConsumo produto =
+    new sistemaGerenciamentoEstoque.MaterialConsumo(
+        nome, custo, quantidade, lote, validade, unidade
+    );
+
+sistemaGerenciamentoEstoque.ProdutoController controller =
+    new sistemaGerenciamentoEstoque.ProdutoController();
+
+try {
+    controller.cadastrarProduto(produto);
+
+    carregarProdutos();
+
+} catch (java.sql.SQLException erro) {
+    javax.swing.JOptionPane.showMessageDialog(
+        this, "Erro ao salvar produto: " + erro.getMessage()
+    );
+    return;
+}
+
 // Mostra os dados validados
 javax.swing.JOptionPane.showMessageDialog(
     this, "Nome: " + nome
@@ -441,43 +522,45 @@ javax.swing.JOptionPane.showMessageDialog(
     }//GEN-LAST:event_txtValidadeActionPerformed
 
     private void btnExcluirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExcluirActionPerformed
-// Pega todas as linhas selecionadas
-int[] linhas = tblProdutos.getSelectedRows();
+        int[] linhas = tblProdutos.getSelectedRows();
 
-if (linhas.length == 0) {
-    javax.swing.JOptionPane.showMessageDialog(
-        this, "Selecione pelo menos um produto."
-    );
-    return;
-}
+        if (linhas.length == 0) {
+            javax.swing.JOptionPane.showMessageDialog(
+                this, "Selecione pelo menos um produto."
+            );
+            return;
+        }
 
-// Confirma a exclusão do grupo
-int resposta = javax.swing.JOptionPane.showConfirmDialog(
-    this,
-    "Excluir " + linhas.length + " produto(s) selecionado(s)?",
-    "Confirmar exclusão",
-    javax.swing.JOptionPane.YES_NO_OPTION
-);
+        int resposta = javax.swing.JOptionPane.showConfirmDialog(
+            this,
+            "Excluir " + linhas.length + " produto(s) selecionado(s)?",
+            "Confirmar exclusão",
+            javax.swing.JOptionPane.YES_NO_OPTION
+        );
 
-if (resposta != javax.swing.JOptionPane.YES_OPTION) {
-    return;
-}
+        if (resposta != javax.swing.JOptionPane.YES_OPTION) {
+            return;
+        }
 
-// Converte as posições antes de alterar a tabela
-for (int i = 0; i < linhas.length; i++) {
-    linhas[i] = tblProdutos.convertRowIndexToModel(linhas[i]);
-}
+        sistemaGerenciamentoEstoque.ProdutoController controller =
+            new sistemaGerenciamentoEstoque.ProdutoController();
+        javax.swing.table.DefaultTableModel modelo =
+            (javax.swing.table.DefaultTableModel) tblProdutos.getModel();
 
-// Ordena as posições para excluir de baixo para cima
-java.util.Arrays.sort(linhas);
-
-javax.swing.table.DefaultTableModel modelo =
-    (javax.swing.table.DefaultTableModel) tblProdutos.getModel();
-
-// Exclui do fim para o início, evitando deslocar as próximas posições
-for (int i = linhas.length - 1; i >= 0; i--) {
-    modelo.removeRow(linhas[i]);
-}        // TODO add your handling code here:
+        try {
+            for (int i = 0; i < linhas.length; i++) {
+                int linhaModelo = tblProdutos.convertRowIndexToModel(linhas[i]);
+                int id = (Integer) modelo.getValueAt(linhaModelo, 0);
+                controller.excluirProduto(id);
+            }
+            carregarProdutos();
+            javax.swing.JOptionPane.showMessageDialog(this, "Produto(s) excluído(s).");
+        } catch (java.sql.SQLException erro) {
+            carregarProdutos();
+            javax.swing.JOptionPane.showMessageDialog(
+                this, "Erro ao excluir produto: " + erro.getMessage()
+            );
+        }
     }//GEN-LAST:event_btnExcluirActionPerformed
 
     private void txtBuscaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtBuscaActionPerformed
@@ -504,7 +587,7 @@ if (busca.isEmpty()) {
 } else {
     // Filtra a coluna Nome (0), ignorando maiúsculas e minúsculas
     filtro.setRowFilter(javax.swing.RowFilter.regexFilter(
-        "(?iu)" + java.util.regex.Pattern.quote(busca), 0
+        "(?iu)" + java.util.regex.Pattern.quote(busca), 1
     ));
 }
 // Limpa o campo após aplicar a busca
