@@ -26,6 +26,11 @@ import sistemaGerenciamentoEstoque.MovimentacaoController;
 import sistemaGerenciamentoEstoque.Produto;
 import sistemaGerenciamentoEstoque.ProdutoController;
 import sistemaGerenciamentoEstoque.RegistroMovimentacao;
+import sistemaGerenciamentoEstoque.exception.EstoqueException;
+import sistemaGerenciamentoEstoque.exception.EstoqueInsuficienteException;
+import sistemaGerenciamentoEstoque.exception.PersistenciaException;
+import sistemaGerenciamentoEstoque.exception.ProdutoNaoEncontradoException;
+import sistemaGerenciamentoEstoque.exception.ProdutoVencidoException;
 
 public class TelaMovimentacao extends JFrame {
 
@@ -150,7 +155,7 @@ public class TelaMovimentacao extends JFrame {
 						nomeResponsavel
 				});
 			}
-		} catch (SQLException e) {
+		} catch (PersistenciaException e) {
 			JOptionPane.showMessageDialog(this, "Erro ao carregar histórico: " + e.getMessage());
 		}
 	}
@@ -186,10 +191,19 @@ public class TelaMovimentacao extends JFrame {
 			cmbProduto.setSelectedIndex(indice);
 			carregarHistorico();
 
+		} catch (EstoqueInsuficienteException e) {
+			JOptionPane.showMessageDialog(this, e.getMessage(), "Estoque insuficiente", JOptionPane.WARNING_MESSAGE);
+		} catch (ProdutoVencidoException e) {
+			JOptionPane.showMessageDialog(this, e.getMessage(), "Produto vencido", JOptionPane.WARNING_MESSAGE);
+		} catch (ProdutoNaoEncontradoException e) {
+			JOptionPane.showMessageDialog(this, e.getMessage(), "Produto não encontrado", JOptionPane.WARNING_MESSAGE);
+			carregarProdutos();
+		} catch (PersistenciaException e) {
+			JOptionPane.showMessageDialog(this, e.getMessage(), "Erro no banco de dados", JOptionPane.ERROR_MESSAGE);
+		} catch (EstoqueException e) {
+			JOptionPane.showMessageDialog(this, e.getMessage());
 		} catch (IllegalArgumentException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage());
-		} catch (SQLException e) {
-			JOptionPane.showMessageDialog(this, "Erro ao registrar: " + e.getMessage());
 		}
 	}
 }
