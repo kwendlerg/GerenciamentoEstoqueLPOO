@@ -70,9 +70,9 @@ public abstract class Produto {
 		setNome(nome);
 		setCusto(custo);
 		setQuantidade(quantidade);
-		setUnidadeMedida(unidadeMedida);
 		setLote(lote);
 		setDataValidade(dataValidade);
+		setUnidadeMedida(unidadeMedida);
 	}
 	
 	protected Produto(int id, String nome, double custo, double quantidade, int lote, LocalDate dataValidade, String unidadeMedida) {
@@ -80,9 +80,9 @@ public abstract class Produto {
 		setNome(nome);
 		setCusto(custo);
 		setQuantidade(quantidade);
-		setUnidadeMedida(unidadeMedida);
 		setLote(lote);
 		setDataValidade(dataValidade);
+		setUnidadeMedida(unidadeMedida);
 	}
 	
 	public abstract void exibirDetalhes();

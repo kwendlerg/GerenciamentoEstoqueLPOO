@@ -14,6 +14,9 @@ public class Epi extends Produto{
 	}
 	
 	public void setTamanho(String tamanho) {
+		if(tamanho == null) {
+			throw new IllegalArgumentException("Tamanho inválido. Aceitos apenas: PP, P, M, G ou GG.");
+		}
 		String t = tamanho.toUpperCase();
 		if(t.equals("PP") || t.equals("P") || t.equals("M") || t.equals("G") || t.equals("GG")) {
 			this.tamanho = t;

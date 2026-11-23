@@ -12,7 +12,7 @@ public class Almoxarife extends Funcionario{
 		System.out.println("--- Detalhes do ALMOXARIFE ---");
 		System.out.println("ID: " + getId());
 		System.out.println("Nome: " + getNome());
-		System.out.println("Data de Admissão; " + getDataAdmissao());
+		System.out.println("Data de Admissão: " + getDataAdmissao());
 		System.out.println("-----------------------");
 	}
 }
