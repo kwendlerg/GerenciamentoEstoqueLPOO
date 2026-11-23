@@ -1,5 +1,6 @@
 package sistemaGerenciamentoEstoque.view;
 
+import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -54,7 +55,7 @@ public class TelaLogin extends JFrame {
 		painel.add(txtNome);
 
 		btnEntrar = new JButton("Entrar");
-		btnCadastrar = new JButton("Cadastrar");
+		btnCadastrar = new JButton("Primeiro acesso");
 		painel.add(btnEntrar);
 		painel.add(btnCadastrar);
 
@@ -68,7 +69,7 @@ public class TelaLogin extends JFrame {
 
 		btnCadastrar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				cadastrar();
+				primeiroAcesso();
 			}
 		});
 
@@ -113,43 +114,69 @@ public class TelaLogin extends JFrame {
 		}
 	}
 
-	private void cadastrar() {
-		String nome = JOptionPane.showInputDialog(this, "Nome do funcionário:");
-		if (nome == null || nome.trim().isEmpty()) {
+	private void primeiroAcesso() {
+		try {
+			if (!controller.listarFuncionarios().isEmpty()) {
+				JOptionPane.showMessageDialog(this, "Já existem funcionários cadastrados.\n"
+						+ "Peça para um ADM cadastrar você no menu Funcionários.");
+				return;
+			}
+		} catch (SQLException e) {
+			JOptionPane.showMessageDialog(this, "Erro ao acessar o banco: " + e.getMessage());
 			return;
 		}
 
-		String[] tipos = { "ADM", "ALMOXARIFE" };
-		JComboBox<String> comboTipo = new JComboBox<String>(tipos);
-		int opcao = JOptionPane.showConfirmDialog(this, comboTipo, "Tipo do funcionário", JOptionPane.OK_CANCEL_OPTION);
-		if (opcao != JOptionPane.OK_OPTION) {
-			return;
+		JOptionPane.showMessageDialog(this, "Nenhum funcionário cadastrado.\nCadastre o primeiro administrador (ADM).");
+
+		Funcionario cadastrado = cadastrarFuncionario(this, true);
+		if (cadastrado != null) {
+			txtId.setText(String.valueOf(cadastrado.getId()));
+			txtNome.setText(cadastrado.getNome());
+		}
+	}
+
+	public static Funcionario cadastrarFuncionario(Component pai, boolean somenteAdm) {
+		String nome = JOptionPane.showInputDialog(pai, "Nome do funcionário:");
+		if (nome == null || nome.trim().isEmpty()) {
+			return null;
+		}
+
+		String tipo = "ADM";
+		if (!somenteAdm) {
+			String[] tipos = { "ADM", "ALMOXARIFE" };
+			JComboBox<String> comboTipo = new JComboBox<String>(tipos);
+			int opcao = JOptionPane.showConfirmDialog(pai, comboTipo, "Tipo do funcionário", JOptionPane.OK_CANCEL_OPTION);
+			if (opcao != JOptionPane.OK_OPTION) {
+				return null;
+			}
+			tipo = comboTipo.getSelectedItem().toString();
 		}
 
 		Funcionario funcionario;
-		if (comboTipo.getSelectedItem().equals("ADM")) {
+		if (tipo.equals("ADM")) {
 			funcionario = new Adm(nome.trim(), LocalDate.now());
 		} else {
 			funcionario = new Almoxarife(nome.trim(), LocalDate.now());
 		}
 
 		try {
+			FuncionarioController controller = new FuncionarioController();
 			controller.cadastrarFuncionario(funcionario);
 
 			ArrayList<Funcionario> lista = controller.listarFuncionarios();
 			Funcionario cadastrado = lista.get(lista.size() - 1);
 
-			JOptionPane.showMessageDialog(this, "Funcionário cadastrado!\nSeu ID é: " + cadastrado.getId()
+			JOptionPane.showMessageDialog(pai, "Funcionário cadastrado!\nNome: " + cadastrado.getNome()
+					+ "\nTipo: " + tipo + "\nID: " + cadastrado.getId()
 					+ "\nUse o ID e o nome para entrar.");
-
-			txtId.setText(String.valueOf(cadastrado.getId()));
-			txtNome.setText(cadastrado.getNome());
+			return cadastrado;
 
 		} catch (IllegalArgumentException e) {
-			JOptionPane.showMessageDialog(this, e.getMessage());
+			JOptionPane.showMessageDialog(pai, e.getMessage());
 		} catch (SQLException e) {
-			JOptionPane.showMessageDialog(this, "Erro ao cadastrar: " + e.getMessage());
+			JOptionPane.showMessageDialog(pai, "Erro ao cadastrar: " + e.getMessage());
 		}
+		return null;
 	}
 
 	public static void main(String[] args) {
