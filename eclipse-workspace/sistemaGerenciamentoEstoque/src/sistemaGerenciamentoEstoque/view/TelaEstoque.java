@@ -19,8 +19,76 @@ public TelaEstoque() {
     javax.swing.UIManager.put("OptionPane.noButtonText", "Não");
 
     initComponents();
+    configurarUsuario();
     carregarProdutos();
 }
+
+    // Mostra quem está logado, cria o menu e aplica as permissões de cada tipo
+    private void configurarUsuario() {
+        sistemaGerenciamentoEstoque.Funcionario usuario = TelaLogin.usuarioLogado;
+        boolean ehAdm = usuario instanceof sistemaGerenciamentoEstoque.Adm;
+
+        String tipoUsuario = "ALMOXARIFE";
+        if (ehAdm) {
+            tipoUsuario = "ADM";
+        }
+        setTitle("Gerenciamento de Estoque - " + usuario.getNome() + " (" + tipoUsuario + ")");
+
+        javax.swing.JMenuBar barraMenu = new javax.swing.JMenuBar();
+
+        javax.swing.JMenu menuMovimentacao = new javax.swing.JMenu("Movimentação");
+        javax.swing.JMenuItem itemMovimentar = new javax.swing.JMenuItem("Entrada / Saída de estoque");
+        itemMovimentar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                TelaMovimentacao tela = new TelaMovimentacao();
+                tela.addWindowListener(new java.awt.event.WindowAdapter() {
+                    public void windowClosed(java.awt.event.WindowEvent e) {
+                        carregarProdutos();
+                    }
+                });
+                tela.setVisible(true);
+            }
+        });
+        menuMovimentacao.add(itemMovimentar);
+        barraMenu.add(menuMovimentacao);
+
+        if (ehAdm) {
+            javax.swing.JMenu menuFuncionarios = new javax.swing.JMenu("Funcionários");
+            javax.swing.JMenuItem itemCadastrar = new javax.swing.JMenuItem("Cadastrar funcionário");
+            itemCadastrar.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    TelaLogin.cadastrarFuncionario(TelaEstoque.this, false);
+                }
+            });
+            menuFuncionarios.add(itemCadastrar);
+            barraMenu.add(menuFuncionarios);
+        }
+
+        javax.swing.JMenu menuConta = new javax.swing.JMenu("Conta");
+        javax.swing.JMenuItem itemSair = new javax.swing.JMenuItem("Sair / trocar usuário");
+        itemSair.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                TelaLogin.usuarioLogado = null;
+                dispose();
+                new TelaLogin().setVisible(true);
+            }
+        });
+        menuConta.add(itemSair);
+        barraMenu.add(menuConta);
+
+        setJMenuBar(barraMenu);
+
+        // Almoxarife só movimenta o estoque: não cadastra nem exclui produtos
+        if (!ehAdm) {
+            btnMostrar.setEnabled(false);
+            btnExcluir.setEnabled(false);
+            btnMostrar.setToolTipText("Apenas ADM pode cadastrar produtos.");
+            btnExcluir.setToolTipText("Apenas ADM pode excluir produtos.");
+        }
+
+        pack();
+        setLocationRelativeTo(null);
+    }
 
 
     // Consulta os produtos salvos e atualiza a tabela.
@@ -653,7 +721,7 @@ txtBusca.setText("");// TODO add your handling code here:
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new TelaEstoque().setVisible(true);
+                new TelaLogin().setVisible(true);
             }
         });
     }
