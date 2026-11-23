@@ -456,18 +456,47 @@ javax.swing.table.DefaultTableModel modelo =
     (javax.swing.table.DefaultTableModel) tblProdutos.getModel();
 
 
-if (!tipo.equals("Material de consumo")) {
-    javax.swing.JOptionPane.showMessageDialog(
-        this, "Por enquanto, cadastre apenas Material de consumo."
-    );
-    return;
+sistemaGerenciamentoEstoque.Produto produto;
+switch (tipo) {
+    case "EPI":
+        String[] tamanhos = {"PP", "P", "M", "G", "GG"};
+        String tamanho = (String) javax.swing.JOptionPane.showInputDialog(
+            this, "Selecione o tamanho do EPI.", "Dados do EPI",
+            javax.swing.JOptionPane.QUESTION_MESSAGE, null, tamanhos, "M");
+        if (tamanho == null) return;
+        produto = new sistemaGerenciamentoEstoque.Epi(
+            nome, custo, quantidade, lote, validade, tamanho, unidade);
+        break;
+    case "Maquinário":
+        javax.swing.JTextField serie = new javax.swing.JTextField();
+        javax.swing.JTextField marca = new javax.swing.JTextField();
+        javax.swing.JTextField voltagem = new javax.swing.JTextField();
+        Object[] campos = {"Número de série:", serie, "Marca:", marca, "Voltagem (V):", voltagem};
+        if (javax.swing.JOptionPane.showConfirmDialog(this, campos, "Dados do maquinário",
+                javax.swing.JOptionPane.OK_CANCEL_OPTION) != javax.swing.JOptionPane.OK_OPTION) return;
+        try {
+            int numeroSerie = Integer.parseInt(serie.getText().trim());
+            int volts = Integer.parseInt(voltagem.getText().trim());
+            String textoMarca = marca.getText().trim();
+            if (numeroSerie <= 0 || volts <= 0 || textoMarca.isEmpty()) {
+                throw new IllegalArgumentException();
+            }
+            produto = new sistemaGerenciamentoEstoque.Maquinario(
+                nome, custo, quantidade, lote, validade, unidade, numeroSerie, textoMarca, volts);
+        } catch (IllegalArgumentException erroMaquinario) {
+            javax.swing.JOptionPane.showMessageDialog(
+                this, "Preencha a marca e informe série e voltagem como inteiros positivos.");
+            return;
+        }
+        break;
+    case "Material de consumo":
+        produto = new sistemaGerenciamentoEstoque.MaterialConsumo(
+            nome, custo, quantidade, lote, validade, unidade);
+        break;
+    default:
+        javax.swing.JOptionPane.showMessageDialog(this, "Selecione um tipo de produto válido.");
+        return;
 }
-
-sistemaGerenciamentoEstoque.MaterialConsumo produto =
-    new sistemaGerenciamentoEstoque.MaterialConsumo(
-        nome, custo, quantidade, lote, validade, unidade
-    );
-
 sistemaGerenciamentoEstoque.ProdutoController controller =
     new sistemaGerenciamentoEstoque.ProdutoController();
 
