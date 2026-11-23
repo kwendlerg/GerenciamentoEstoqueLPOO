@@ -2,7 +2,14 @@
 package sistemaGerenciamentoEstoque;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
+
+import sistemaGerenciamentoEstoque.exception.EstoqueException;
+import sistemaGerenciamentoEstoque.exception.EstoqueInsuficienteException;
+import sistemaGerenciamentoEstoque.exception.PersistenciaException;
+import sistemaGerenciamentoEstoque.exception.ProdutoNaoEncontradoException;
+import sistemaGerenciamentoEstoque.exception.ProdutoVencidoException;
 
 public class MovimentacaoController {
 
@@ -35,38 +42,36 @@ public class MovimentacaoController {
 
     public void validarSaida(Produto produto,
                              Funcionario funcionario,
-                             double quantidade) {
+                             double quantidade) throws EstoqueInsuficienteException {
 
         validarEntrada(produto, funcionario, quantidade);
 
         if (quantidade > produto.getQuantidade()) {
-            throw new IllegalArgumentException(
-                "Estoque insuficiente."
+            throw new EstoqueInsuficienteException(
+                produto.getNome(), quantidade, produto.getQuantidade()
             );
+        }
+    }
+
+    public void validarValidade(Produto produto) throws ProdutoVencidoException {
+
+        LocalDate validade = produto.getDataValidade();
+
+        if (validade != null && validade.isBefore(LocalDate.now())) {
+            throw new ProdutoVencidoException(produto.getNome(), validade);
         }
     }
 
     public void registrarEntrada(Produto produto,
                                  Funcionario funcionario,
-                                 double quantidade) throws SQLException {
+                                 double quantidade) throws EstoqueException {
 
         validarEntrada(produto, funcionario, quantidade);
 
-        if (produto.getId() <= 0 || funcionario.getId() <= 0) {
-            throw new IllegalArgumentException(
-                "Produto e funcionario devem estar cadastrados."
-            );
-        }
+        Produto produtoBanco = buscarProdutoNoBanco(produto.getId());
+        Funcionario funcionarioBanco = buscarFuncionarioNoBanco(funcionario.getId());
 
-        Produto produtoBanco = produtoDAO.buscarPorId(produto.getId());
-        Funcionario funcionarioBanco =
-            funcionarioDAO.buscarPorId(funcionario.getId());
-
-        if (produtoBanco == null || funcionarioBanco == null) {
-            throw new IllegalArgumentException(
-                "Produto ou funcionario nao encontrado."
-            );
-        }
+        validarValidade(produtoBanco);
 
         double novaQuantidade = produtoBanco.getQuantidade() + quantidade;
 
@@ -80,32 +85,24 @@ public class MovimentacaoController {
             produtoBanco, funcionarioBanco, "ENTRADA", quantidade
         );
 
-        produtoDAO.atualizarQuantidade(produtoBanco.getId(), novaQuantidade);
-        dao.inserir(registro);
+        try {
+            produtoDAO.atualizarQuantidade(produtoBanco.getId(), novaQuantidade);
+            dao.inserir(registro);
+        } catch (SQLException e) {
+            throw new PersistenciaException("registrar entrada", e);
+        }
     }
 
     public void registrarSaida(Produto produto,
                                Funcionario funcionario,
-                               double quantidade) throws SQLException {
+                               double quantidade) throws EstoqueException {
 
         validarEntrada(produto, funcionario, quantidade);
 
-        if (produto.getId() <= 0 || funcionario.getId() <= 0) {
-            throw new IllegalArgumentException(
-                "Produto e funcionario devem estar cadastrados."
-            );
-        }
+        Produto produtoBanco = buscarProdutoNoBanco(produto.getId());
+        Funcionario funcionarioBanco = buscarFuncionarioNoBanco(funcionario.getId());
 
-        Produto produtoBanco = produtoDAO.buscarPorId(produto.getId());
-        Funcionario funcionarioBanco =
-            funcionarioDAO.buscarPorId(funcionario.getId());
-
-        if (produtoBanco == null || funcionarioBanco == null) {
-            throw new IllegalArgumentException(
-                "Produto ou funcionario nao encontrado."
-            );
-        }
-
+        validarValidade(produtoBanco);
         validarSaida(produtoBanco, funcionarioBanco, quantidade);
 
         double novaQuantidade = produtoBanco.getQuantidade() - quantidade;
@@ -114,25 +111,67 @@ public class MovimentacaoController {
             produtoBanco, funcionarioBanco, "SAIDA", quantidade
         );
 
-        produtoDAO.atualizarQuantidade(produtoBanco.getId(), novaQuantidade);
-        dao.inserir(registro);
+        try {
+            produtoDAO.atualizarQuantidade(produtoBanco.getId(), novaQuantidade);
+            dao.inserir(registro);
+        } catch (SQLException e) {
+            throw new PersistenciaException("registrar saida", e);
+        }
     }
 
     public ArrayList<RegistroMovimentacao> listarMovimentacoes()
-            throws SQLException {
+            throws PersistenciaException {
 
-        return dao.listarTodos();
+        try {
+            return dao.listarTodos();
+        } catch (SQLException e) {
+            throw new PersistenciaException("listar movimentacoes", e);
+        }
     }
 
     public ArrayList<RegistroMovimentacao> listarPorProduto(int id)
-            throws SQLException {
+            throws EstoqueException {
+
+        buscarProdutoNoBanco(id);
+
+        try {
+            return dao.listarPorProduto(id);
+        } catch (SQLException e) {
+            throw new PersistenciaException("listar movimentacoes do produto", e);
+        }
+    }
+
+    private Produto buscarProdutoNoBanco(int id) throws EstoqueException {
 
         if (id <= 0) {
-            throw new IllegalArgumentException(
-                "ID invalido."
-            );
+            throw new ProdutoNaoEncontradoException(id);
         }
 
-        return dao.listarPorProduto(id);
+        Produto produto;
+        try {
+            produto = produtoDAO.buscarPorId(id);
+        } catch (SQLException e) {
+            throw new PersistenciaException("buscar produto", e);
+        }
+
+        if (produto == null) {
+            throw new ProdutoNaoEncontradoException(id);
+        }
+        return produto;
+    }
+
+    private Funcionario buscarFuncionarioNoBanco(int id) throws EstoqueException {
+
+        Funcionario funcionario;
+        try {
+            funcionario = funcionarioDAO.buscarPorId(id);
+        } catch (SQLException e) {
+            throw new PersistenciaException("buscar funcionario", e);
+        }
+
+        if (funcionario == null) {
+            throw new EstoqueException("Funcionario com ID " + id + " nao foi encontrado.");
+        }
+        return funcionario;
     }
 }
