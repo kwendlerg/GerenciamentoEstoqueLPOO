@@ -4,6 +4,9 @@
  */
 package sistemaGerenciamentoEstoque.view;
 
+import java.awt.*;
+import javax.swing.*;
+
 /**
  *
  * @author Micro
@@ -20,6 +23,7 @@ public TelaEstoque() {
 
     initComponents();
     configurarUsuario();
+    organizarTela();
     carregarProdutos();
 }
 
@@ -40,12 +44,8 @@ public TelaEstoque() {
         javax.swing.JMenuItem itemMovimentar = new javax.swing.JMenuItem("Entrada / Saída de estoque");
         itemMovimentar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                TelaMovimentacao tela = new TelaMovimentacao();
-                tela.addWindowListener(new java.awt.event.WindowAdapter() {
-                    public void windowClosed(java.awt.event.WindowEvent e) {
-                        carregarProdutos();
-                    }
-                });
+                // Passa o método que recarrega a tabela após uma movimentação.
+                TelaMovimentacao tela = new TelaMovimentacao(TelaEstoque.this::carregarProdutos);
                 tela.setVisible(true);
             }
         });
@@ -90,6 +90,100 @@ public TelaEstoque() {
         setLocationRelativeTo(null);
     }
 
+
+    private void organizarTela() {
+        JPanel raiz = new JPanel(new BorderLayout());
+        raiz.setBackground(VisualEstoque.FUNDO);
+        // Coloca os menus existentes ao lado do título.
+        JPanel topo = VisualEstoque.cabecalho("Gestão de Estoque");
+        JMenuBar menu = getJMenuBar();
+        setJMenuBar(null);
+        topo.add(menu, BorderLayout.EAST);
+        raiz.add(topo, BorderLayout.NORTH);
+
+        JPanel conteudo = new JPanel(new BorderLayout(16, 0));
+        conteudo.setOpaque(false);
+        conteudo.setBorder(BorderFactory.createEmptyBorder(16, 18, 18, 18));
+
+        // Monta o formulário no lado esquerdo da janela.
+        JPanel cadastro = VisualEstoque.cartao(new BorderLayout(0, 12));
+        cadastro.add(VisualEstoque.titulo("Cadastrar produto", 18, VisualEstoque.MARINHO), BorderLayout.NORTH);
+        JPanel campos = new JPanel(new GridBagLayout());
+        campos.setOpaque(false);
+        GridBagConstraints pos = new GridBagConstraints();
+        pos.anchor = GridBagConstraints.WEST;
+        pos.insets = new Insets(4, 0, 4, 8);
+        JLabel[] rotulos = {jLabel1, jLabel5, jLabel2, jLabel3, jLabel4, jLabel6, jLabel7};
+        JComponent[] entradas = {txtNome, cmbTipo, txtCusto, txtQuantidade, cmbUnidade, txtLote, txtValidade};
+        jLabel7.setText("Validade");
+        txtValidade.setToolTipText("Formato dd/MM/aaaa");
+        // Alinha cada rótulo com seu campo na mesma linha.
+        for (int i = 0; i < entradas.length; i++) {
+            pos.gridy = i;
+            pos.gridx = 0;
+            pos.weightx = 0;
+            pos.fill = GridBagConstraints.NONE;
+            campos.add(rotulos[i], pos);
+            pos.gridx = 1;
+            pos.weightx = 1;
+            pos.fill = GridBagConstraints.HORIZONTAL;
+            if (entradas[i] instanceof JTextField campo) {
+                campo.setColumns(13);
+                VisualEstoque.campo(campo, rotulos[i]);
+            } else {
+                rotulos[i].setLabelFor(entradas[i]);
+            }
+            campos.add(entradas[i], pos);
+        }
+        cadastro.add(campos, BorderLayout.CENTER);
+        JPanel acoes = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        acoes.setOpaque(false);
+        VisualEstoque.botao(btnMostrar, VisualEstoque.VERDE, Color.WHITE);
+        VisualEstoque.botao(btnLimpar, VisualEstoque.FUNDO, VisualEstoque.MARINHO);
+        acoes.add(btnMostrar);
+        acoes.add(btnLimpar);
+        cadastro.add(acoes, BorderLayout.SOUTH);
+        conteudo.add(cadastro, BorderLayout.WEST);
+
+        // Reserva o lado direito para a busca e a tabela.
+        JPanel produtos = VisualEstoque.cartao(new BorderLayout(0, 10));
+        JPanel busca = new JPanel(new BorderLayout(8, 0));
+        busca.setOpaque(false);
+        VisualEstoque.campo(txtBusca, jLabel8);
+        VisualEstoque.botao(btnBuscar, VisualEstoque.VERDE, Color.WHITE);
+        busca.add(jLabel8, BorderLayout.WEST);
+        busca.add(txtBusca, BorderLayout.CENTER);
+        busca.add(btnBuscar, BorderLayout.EAST);
+        JPanel barra = new JPanel(new BorderLayout(0, 8));
+        barra.setOpaque(false);
+        barra.add(VisualEstoque.titulo("Produtos", 18, VisualEstoque.MARINHO), BorderLayout.NORTH);
+        barra.add(busca, BorderLayout.SOUTH);
+        produtos.add(barra, BorderLayout.NORTH);
+
+        // Aumenta a altura das linhas e destaca a seleção.
+        tblProdutos.setRowHeight(28);
+        tblProdutos.setSelectionBackground(new Color(0xD5EFEA));
+        tblProdutos.setSelectionForeground(VisualEstoque.MARINHO);
+        tblProdutos.setShowVerticalLines(false);
+        tblProdutos.setGridColor(VisualEstoque.BORDA);
+        tblProdutos.setFillsViewportHeight(true);
+        tblProdutos.getTableHeader().setPreferredSize(new Dimension(0, 30));
+        jScrollPane1.setPreferredSize(new Dimension(650, 325));
+        jScrollPane1.setBorder(BorderFactory.createLineBorder(VisualEstoque.BORDA));
+        produtos.add(jScrollPane1, BorderLayout.CENTER);
+
+        JPanel exclusao = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        exclusao.setOpaque(false);
+        VisualEstoque.botao(btnExcluir, new Color(0xFCE8EC), VisualEstoque.VERMELHO);
+        exclusao.add(btnExcluir);
+        produtos.add(exclusao, BorderLayout.SOUTH);
+        conteudo.add(produtos, BorderLayout.CENTER);
+        raiz.add(conteudo, BorderLayout.CENTER);
+        setContentPane(raiz);
+        pack();
+        setMinimumSize(new Dimension(860, getHeight()));
+        setLocationRelativeTo(null);
+    }
 
     // Consulta os produtos salvos e atualiza a tabela.
     private void carregarProdutos() {
@@ -525,6 +619,7 @@ javax.swing.table.DefaultTableModel modelo =
 
 
 sistemaGerenciamentoEstoque.Produto produto;
+// Cria o tipo de produto escolhido e pede os dados específicos quando necessário.
 switch (tipo) {
     case "EPI":
         String[] tamanhos = {"PP", "P", "M", "G", "GG"};
@@ -569,6 +664,7 @@ sistemaGerenciamentoEstoque.ProdutoController controller =
     new sistemaGerenciamentoEstoque.ProdutoController();
 
 try {
+    // Entrega o produto validado ao controlador para gravar no banco.
     controller.cadastrarProduto(produto);
 
     carregarProdutos();

@@ -47,7 +47,11 @@ public class TelaMovimentacao extends JFrame {
 	private ProdutoController produtoController;
 	private MovimentacaoController movimentacaoController;
 
-	public TelaMovimentacao() {
+	// Guarda a ação de atualização enviada pela tela de estoque.
+	private final Runnable aoMovimentar;
+
+	public TelaMovimentacao(Runnable aoMovimentar) {
+		this.aoMovimentar = aoMovimentar;
 		produtoController = new ProdutoController();
 		movimentacaoController = new MovimentacaoController();
 
@@ -185,6 +189,8 @@ public class TelaMovimentacao extends JFrame {
 				movimentacaoController.registrarSaida(produto, usuario, quantidade);
 			}
 
+			// Atualiza a tabela principal assim que o controlador conclui a entrada ou saída.
+			aoMovimentar.run();
 			JOptionPane.showMessageDialog(this, "Movimentação registrada!");
 			txtQuantidade.setText("");
 			carregarProdutos();

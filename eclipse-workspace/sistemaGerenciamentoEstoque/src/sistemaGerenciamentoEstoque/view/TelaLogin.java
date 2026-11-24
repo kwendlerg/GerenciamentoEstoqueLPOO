@@ -39,28 +39,45 @@ public class TelaLogin extends JFrame {
 
 		setTitle("Login - Gerenciamento de Estoque");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setSize(360, 180);
-		setLocationRelativeTo(null);
-		setResizable(false);
+        setResizable(false);
 
-		JPanel painel = new JPanel(new GridLayout(3, 2, 10, 10));
-		painel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        // Divide a janela em cabeçalho e formulário.
+        JPanel raiz = new JPanel(new java.awt.BorderLayout());
+        raiz.setBackground(VisualEstoque.FUNDO);
+        raiz.add(VisualEstoque.cabecalho("Gestão de Estoque"), java.awt.BorderLayout.NORTH);
 
-		painel.add(new JLabel("ID do funcionário:"));
-		txtId = new JTextField();
-		painel.add(txtId);
+        JPanel margem = new JPanel(new java.awt.BorderLayout());
+        margem.setOpaque(false);
+        margem.setBorder(BorderFactory.createEmptyBorder(18, 22, 22, 22));
+        // Alinha os rótulos, campos e botões numa coluna.
+        JPanel painel = VisualEstoque.cartao(new GridLayout(0, 1, 0, 8));
 
-		painel.add(new JLabel("Nome:"));
-		txtNome = new JTextField();
-		painel.add(txtNome);
+        JLabel rotuloId = new JLabel("ID do funcionário");
+        txtId = new JTextField(28);
+        VisualEstoque.campo(txtId, rotuloId);
+        painel.add(rotuloId);
+        painel.add(txtId);
 
-		btnEntrar = new JButton("Entrar");
-		btnCadastrar = new JButton("Primeiro acesso");
-		painel.add(btnEntrar);
-		painel.add(btnCadastrar);
+        JLabel rotuloNome = new JLabel("Nome");
+        txtNome = new JTextField(28);
+        VisualEstoque.campo(txtNome, rotuloNome);
+        painel.add(rotuloNome);
+        painel.add(txtNome);
 
-		add(painel);
+        btnEntrar = new JButton("Entrar");
+        btnCadastrar = new JButton("Primeiro acesso");
+        VisualEstoque.botao(btnEntrar, VisualEstoque.VERDE, java.awt.Color.WHITE);
+        VisualEstoque.botao(btnCadastrar, VisualEstoque.FUNDO, VisualEstoque.MARINHO);
+        painel.add(btnEntrar);
+        painel.add(btnCadastrar);
 
+        margem.add(painel);
+        raiz.add(margem);
+        setContentPane(raiz);
+        pack();
+        setLocationRelativeTo(null);
+
+		// O clique em Entrar chama o método que valida o login.
 		btnEntrar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				entrar();
@@ -73,6 +90,7 @@ public class TelaLogin extends JFrame {
 			}
 		});
 
+		// Permite entrar pressionando Enter.
 		getRootPane().setDefaultButton(btnEntrar);
 	}
 
@@ -94,6 +112,7 @@ public class TelaLogin extends JFrame {
 		}
 
 		try {
+			// Consulta o funcionário pelo ID e compara o nome cadastrado.
 			Funcionario funcionario = controller.buscarFuncionario(id);
 
 			if (funcionario == null || !funcionario.getNome().equalsIgnoreCase(nome)) {
@@ -101,6 +120,7 @@ public class TelaLogin extends JFrame {
 				return;
 			}
 
+			// Guarda o usuário da sessão para a tela aplicar as permissões.
 			usuarioLogado = funcionario;
 			JOptionPane.showMessageDialog(this, "Bem-vindo, " + funcionario.getNome() + "!");
 
