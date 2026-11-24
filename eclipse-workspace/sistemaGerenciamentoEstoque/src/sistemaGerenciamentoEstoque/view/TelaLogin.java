@@ -6,7 +6,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -15,6 +14,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
 import sistemaGerenciamentoEstoque.Adm;
@@ -28,8 +28,8 @@ public class TelaLogin extends JFrame {
 
 	public static Funcionario usuarioLogado;
 
-	private JTextField txtId;
-	private JTextField txtNome;
+	private JTextField txtLogin;
+	private JPasswordField txtSenha;
 	private JButton btnEntrar;
 	private JButton btnCadastrar;
 	private FuncionarioController controller;
@@ -52,17 +52,19 @@ public class TelaLogin extends JFrame {
         // Alinha os rótulos, campos e botões numa coluna.
         JPanel painel = VisualEstoque.cartao(new GridLayout(0, 1, 0, 8));
 
-        JLabel rotuloId = new JLabel("ID do funcionário");
-        txtId = new JTextField(28);
-        VisualEstoque.campo(txtId, rotuloId);
-        painel.add(rotuloId);
-        painel.add(txtId);
+        JLabel rotuloLogin = new JLabel("Login");
+        txtLogin = new JTextField(28);
+        VisualEstoque.campo(txtLogin, rotuloLogin);
+        painel.add(rotuloLogin);
+        painel.add(txtLogin);
 
-        JLabel rotuloNome = new JLabel("Nome");
-        txtNome = new JTextField(28);
-        VisualEstoque.campo(txtNome, rotuloNome);
-        painel.add(rotuloNome);
-        painel.add(txtNome);
+        // A senha aparece como asteriscos enquanto é digitada.
+        JLabel rotuloSenha = new JLabel("Senha");
+        txtSenha = new JPasswordField(28);
+        txtSenha.setEchoChar('*');
+        VisualEstoque.campo(txtSenha, rotuloSenha);
+        painel.add(rotuloSenha);
+        painel.add(txtSenha);
 
         btnEntrar = new JButton("Entrar");
         btnCadastrar = new JButton("Primeiro acesso");
@@ -95,28 +97,22 @@ public class TelaLogin extends JFrame {
 	}
 
 	private void entrar() {
-		String textoId = txtId.getText().trim();
-		String nome = txtNome.getText().trim();
+		String login = txtLogin.getText().trim();
+		String senha = new String(txtSenha.getPassword());
 
-		if (textoId.isEmpty() || nome.isEmpty()) {
-			JOptionPane.showMessageDialog(this, "Preencha o ID e o nome.");
-			return;
-		}
-
-		int id;
-		try {
-			id = Integer.parseInt(textoId);
-		} catch (NumberFormatException e) {
-			JOptionPane.showMessageDialog(this, "O ID deve ser um número.");
+		if (login.isEmpty() || senha.isEmpty()) {
+			JOptionPane.showMessageDialog(this, "Preencha o login e a senha.");
 			return;
 		}
 
 		try {
-			// Consulta o funcionário pelo ID e compara o nome cadastrado.
-			Funcionario funcionario = controller.buscarFuncionario(id);
+			// Confere o login e a senha no banco.
+			Funcionario funcionario = controller.autenticar(login, senha);
 
-			if (funcionario == null || !funcionario.getNome().equalsIgnoreCase(nome)) {
-				JOptionPane.showMessageDialog(this, "ID ou nome incorretos.");
+			if (funcionario == null) {
+				JOptionPane.showMessageDialog(this, "Login ou senha incorretos.");
+				txtSenha.setText("");
+				txtSenha.requestFocusInWindow();
 				return;
 			}
 
@@ -136,8 +132,8 @@ public class TelaLogin extends JFrame {
 
 	private void primeiroAcesso() {
 		try {
-			if (!controller.listarFuncionarios().isEmpty()) {
-				JOptionPane.showMessageDialog(this, "Já existem funcionários cadastrados.\n"
+			if (controller.existeUsuarioComLogin()) {
+				JOptionPane.showMessageDialog(this, "Já existem usuários cadastrados.\n"
 						+ "Peça para um ADM cadastrar você no menu Funcionários.");
 				return;
 			}
@@ -146,49 +142,77 @@ public class TelaLogin extends JFrame {
 			return;
 		}
 
-		JOptionPane.showMessageDialog(this, "Nenhum funcionário cadastrado.\nCadastre o primeiro administrador (ADM).");
+		JOptionPane.showMessageDialog(this, "Nenhum usuário cadastrado.\nCadastre o primeiro administrador (ADM).");
 
 		Funcionario cadastrado = cadastrarFuncionario(this, true);
 		if (cadastrado != null) {
-			txtId.setText(String.valueOf(cadastrado.getId()));
-			txtNome.setText(cadastrado.getNome());
+			txtLogin.setText(cadastrado.getLogin());
+			txtSenha.setText("");
+			txtSenha.requestFocusInWindow();
 		}
 	}
 
 	public static Funcionario cadastrarFuncionario(Component pai, boolean somenteAdm) {
-		String nome = JOptionPane.showInputDialog(pai, "Nome do funcionário:");
-		if (nome == null || nome.trim().isEmpty()) {
+		JTextField campoNome = new JTextField();
+		JTextField campoLogin = new JTextField();
+		JPasswordField campoSenha = new JPasswordField();
+		JPasswordField campoConfirmar = new JPasswordField();
+		campoSenha.setEchoChar('*');
+		campoConfirmar.setEchoChar('*');
+
+		String[] tipos = { "ADM", "ALMOXARIFE" };
+		JComboBox<String> comboTipo = new JComboBox<String>(tipos);
+		if (somenteAdm) {
+			comboTipo.setEnabled(false);
+		}
+
+		Object[] campos = {
+				"Nome:", campoNome,
+				"Login:", campoLogin,
+				"Senha (mínimo 4 caracteres):", campoSenha,
+				"Confirmar senha:", campoConfirmar,
+				"Tipo:", comboTipo
+		};
+
+		int opcao = JOptionPane.showConfirmDialog(pai, campos, "Cadastrar funcionário", JOptionPane.OK_CANCEL_OPTION);
+		if (opcao != JOptionPane.OK_OPTION) {
 			return null;
 		}
 
-		String tipo = "ADM";
-		if (!somenteAdm) {
-			String[] tipos = { "ADM", "ALMOXARIFE" };
-			JComboBox<String> comboTipo = new JComboBox<String>(tipos);
-			int opcao = JOptionPane.showConfirmDialog(pai, comboTipo, "Tipo do funcionário", JOptionPane.OK_CANCEL_OPTION);
-			if (opcao != JOptionPane.OK_OPTION) {
-				return null;
-			}
-			tipo = comboTipo.getSelectedItem().toString();
+		String nome = campoNome.getText().trim();
+		String login = campoLogin.getText().trim();
+		String senha = new String(campoSenha.getPassword());
+		String confirmar = new String(campoConfirmar.getPassword());
+		String tipo = comboTipo.getSelectedItem().toString();
+
+		if (nome.isEmpty() || login.isEmpty() || senha.isEmpty()) {
+			JOptionPane.showMessageDialog(pai, "Preencha nome, login e senha.");
+			return null;
+		}
+
+		if (!senha.equals(confirmar)) {
+			JOptionPane.showMessageDialog(pai, "As senhas não conferem.");
+			return null;
 		}
 
 		Funcionario funcionario;
 		if (tipo.equals("ADM")) {
-			funcionario = new Adm(nome.trim(), LocalDate.now());
+			funcionario = new Adm(nome, LocalDate.now());
 		} else {
-			funcionario = new Almoxarife(nome.trim(), LocalDate.now());
+			funcionario = new Almoxarife(nome, LocalDate.now());
 		}
+		funcionario.setLogin(login);
+		funcionario.setSenha(senha);
 
 		try {
 			FuncionarioController controller = new FuncionarioController();
 			controller.cadastrarFuncionario(funcionario);
 
-			ArrayList<Funcionario> lista = controller.listarFuncionarios();
-			Funcionario cadastrado = lista.get(lista.size() - 1);
+			Funcionario cadastrado = controller.buscarPorLogin(login);
 
 			JOptionPane.showMessageDialog(pai, "Funcionário cadastrado!\nNome: " + cadastrado.getNome()
-					+ "\nTipo: " + tipo + "\nID: " + cadastrado.getId()
-					+ "\nUse o ID e o nome para entrar.");
+					+ "\nTipo: " + tipo + "\nLogin: " + cadastrado.getLogin()
+					+ "\nUse o login e a senha para entrar.");
 			return cadastrado;
 
 		} catch (IllegalArgumentException e) {
