@@ -10,12 +10,14 @@ public class FuncionarioDAO {
 	
 	public void inserir(Funcionario funcionario) throws SQLException {
 		Connection conexao = ConexaoSQLite.conectar();
-		String sql = "INSERT INTO funcionarios (nome, data_admissao, tipo_funcionario) VALUES (?, ?, ?)";
+		String sql = "INSERT INTO funcionarios (nome, data_admissao, tipo_funcionario, login, senha) VALUES (?, ?, ?, ?, ?)";
 		PreparedStatement stmt = conexao.prepareStatement(sql);
 		
 		stmt.setString(1, funcionario.getNome());
 		stmt.setString(2, String.valueOf(funcionario.getDataAdmissao()));
 		stmt.setString(3, getTipo(funcionario));
+		stmt.setString(4, funcionario.getLogin());
+		stmt.setString(5, funcionario.getSenha());
 		stmt.executeUpdate();
 		
 		stmt.close();
@@ -24,13 +26,15 @@ public class FuncionarioDAO {
 	
 	public void atualizar(Funcionario funcionario) throws SQLException {
 		Connection conexao = ConexaoSQLite.conectar();
-		String sql = "UPDATE funcionarios SET nome = ?, data_admissao = ?, tipo_funcionario = ? WHERE id = ?";
+		String sql = "UPDATE funcionarios SET nome = ?, data_admissao = ?, tipo_funcionario = ?, login = ?, senha = ? WHERE id = ?";
 		PreparedStatement stmt = conexao.prepareStatement(sql);
 		
 		stmt.setString(1, funcionario.getNome());
 		stmt.setString(2, String.valueOf(funcionario.getDataAdmissao()));
 		stmt.setString(3, getTipo(funcionario));
-		stmt.setInt(4, funcionario.getId());
+		stmt.setString(4, funcionario.getLogin());
+		stmt.setString(5, funcionario.getSenha());
+		stmt.setInt(6, funcionario.getId());
 		stmt.executeUpdate();
 		
 		stmt.close();
@@ -54,6 +58,24 @@ public class FuncionarioDAO {
 		String sql = "SELECT * FROM funcionarios WHERE id = ?";
 		PreparedStatement stmt = conexao.prepareStatement(sql);
 		stmt.setInt(1, id);
+		ResultSet rs = stmt.executeQuery();
+		
+		Funcionario funcionario = null;
+		if (rs.next()) {
+			funcionario = criarFuncionario(rs);
+		}
+		
+		rs.close();
+		stmt.close();
+		conexao.close();
+		return funcionario;
+	}
+	
+	public Funcionario buscarPorLogin(String login) throws SQLException {
+		Connection conexao = ConexaoSQLite.conectar();
+		String sql = "SELECT * FROM funcionarios WHERE login = ?";
+		PreparedStatement stmt = conexao.prepareStatement(sql);
+		stmt.setString(1, login);
 		ResultSet rs = stmt.executeQuery();
 		
 		Funcionario funcionario = null;
@@ -110,6 +132,13 @@ public class FuncionarioDAO {
 		}
 		
 		funcionario.setId(rs.getInt("id"));
+		
+		if (rs.getString("login") != null) {
+			funcionario.setLogin(rs.getString("login"));
+		}
+		if (rs.getString("senha") != null) {
+			funcionario.setSenha(rs.getString("senha"));
+		}
 		return funcionario;
 	}
 }
